@@ -720,24 +720,14 @@ self.addEventListener('fetch', e => {
     resultCard.classList.add('has-result');
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          system: `Eres un traductor experto y preciso. Traduce el texto del usuario de ${from} a ${to}. 
-Responde ÚNICAMENTE con la traducción, sin explicaciones, sin comillas, sin prefijos como "Traducción:" o similares. 
-Preserva el tono, el registro (formal/informal) y el estilo del texto original. 
-Si hay jerga o expresiones idiomáticas, usa equivalentes naturales en el idioma destino.`,
-          messages: [{ role: 'user', content: text }]
-        })
-      });
+      const langPair = `${langFrom.value}|${langTo.value}`;
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`;
+      const response = await fetch(url);
 
       const data = await response.json();
-      if (data.error) throw new Error(data.error.message || 'Error de API');
+      if (data.responseStatus !== 200) throw new Error(data.responseDetails || 'Error de API');
 
-      const translated = data.content?.[0]?.text?.trim() || '';
+      const translated = data.responseData?.translatedText?.trim() || '';
       if (!translated) throw new Error('Respuesta vacía');
 
       // Typewriter effect
